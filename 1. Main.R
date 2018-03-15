@@ -17,10 +17,11 @@ Token<<- set_token() #Date and time
 # 6 tests created, 10 items per round/test. 
 # I used a random generator because I wanted big, easy to see differences in the charts
 total_rounds <- 6
+total_items<-10
 results<-data_frame("round"=paste0("round",seq(1,total_rounds)),"itm_params"=seq(1,total_rounds))
 
 for(r in 1:total_rounds){
-  results[r,]$itm_params<-list(unlist(runif(10, min = -3.000, max = 3.000)))
+  results[r,]$itm_params<-list(unlist(runif(total_items, min = -3.000, max = 3.000)))
 }
 results$itm_params
 
