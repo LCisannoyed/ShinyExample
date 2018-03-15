@@ -1,0 +1,166 @@
+---
+title: "Compare Images"
+author: "fgh"
+date: ""
+output: 
+  #http://rmarkdown.rstudio.com/flexdashboard/layouts.html
+  flexdashboard::flex_dashboard:
+    orientation: columns 
+    vertical_layout: fill
+runtime: shiny
+
+---
+<!-- set up -->
+
+```{r setup, include=FALSE}
+library("shiny")
+library("flexdashboard")
+library("DT")
+library("plotly")
+library("tidyverse")
+library("magrittr")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r global, include=FALSE}
+# load data in 'global' chunk so it can be shared by all users of the dashboard
+library(datasets)
+#data(all_images)
+```
+
+
+Inputs {.sidebar data-width=300}
+-----------------------------------------------------------------------
+Use the options below to select a round.
+
+```{r input_params, echo=FALSE}
+ all_images<-tibble(fname = list.files(output_directory, 
+                                      "*.png", full.names = F))
+
+ all_images<-{all_images%>%
+    mutate(
+      round=substr(.$fname, 1, regexpr(' ', .$fname)) ,
+      directory=output_directory,
+      data_token=case_when(
+        grepl("\\(",.$fname) ~ substr(.$fname, regexpr('\\(', .$fname)+1, regexpr('\\)', .$fname)-1) ,
+        TRUE ~ "-")
+    ) } %>%
+  arrange(.$round, desc(.$data_token))
+
+
+ all_rounds<-unique(all_images$round)
+
+```
+
+
+```{r inputs_top, eval=TRUE, echo=FALSE}
+
+#part 1 - Round
+inputPanel(
+      selectInput("round", "Choose a round:",
+                   choices = all_rounds )
+      )
+
+
+
+#part 4 - get user input
+selected_round<-reactive({input$round})
+selected_dyp<- reactive({unique(all_images[all_images$round==input$round ,])})
+
+
+output$selected_round<-renderText({selected_round()})
+
+#part 5 - time range
+all_times<-reactive({unique(all_images[all_images$round==input$round  ,]$data_token)})
+
+renderUI(inputPanel(
+     sliderInput("time", 
+             label = div(style='float:left;', 'Age of file',
+                         div(style='width:200px;', 
+                           div(style='float:left;', 'oldest'), 
+                           div(style='float:right;', 'newest'))),
+                    min = 1,
+                    max = length(all_times()),
+                    value = length(all_times()),step=-1, ticks = F, animate = T, width = '500px'
+        )
+  ))
+  
+  #part 6- get user input
+selected_time<-reactive({
+  length(all_times())+1 -input$time
+  })
+selected_fname<-reactive({
+    selected_dyp()[selected_time(),]$fname
+})
+  
+output$selected_time<-renderText({selected_time()})
+output$selected_fname<-renderText({selected_fname()})
+
+
+firstimagepath<-reactive({all_images[1,]$fname})
+
+### selected_token<-reactive({
+###   selected_dyp()[selected_time(),]$data_token
+###   })
+###  
+###  output$selected_token<-renderText({
+###    time_from_selected_fname<-selected_token()
+###     substr(time_from_selected_fname,1, regexpr("\\.[^\\.]*$", time_from_selected_fname)-1)
+###  
+###  })
+###  
+
+#part 7- get plot based on all the user input
+  imagepath<-reactive({
+    paste0(selected_dyp()[selected_time(),]$directory,selected_dyp()[selected_time(),]$fname)
+    })
+  
+  suppressWarnings(
+    
+  output$plot<-renderImage({
+  
+    out <- tryCatch(
+      {if(file.exists(imagepath())){
+              imagepath()
+        }
+        },
+      error=function(cond) {
+       # Choose a return value in case of error
+       return(firstimagepath())
+     },
+     warning=function(cond) {
+         # Choose a return value in case of error
+       return(firstimagepath())
+     }
+    )
+   
+   list(src = out,
+            contentType = 'image/png',
+            width = 600,
+            height = 500,
+            alt = "This is alternate text")
+   
+ }, deleteFile = FALSE)
+ )
+ 
+
+
+```
+<!-- 
+`r textOutput("selected_round")` 
+`r textOutput("selected_round")` 
+`r textOutput("selected_time")` 
+
+-->
+
+
+Column  {.tabset}
+-------------------------------------
+
+### Charts 
+
+>`r textOutput("selected_fname")`
+
+`r  imageOutput("plot") `
+
+
