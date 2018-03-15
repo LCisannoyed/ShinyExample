@@ -149,22 +149,23 @@ get_token<-function(){
 # ----------------------------
 
 # ----------------------------
-create_plot<-function(plot_data, round, dir="Output_Charts"){
+create_plot<-function(plot_data, round, level, dir="Output_Charts"){
   
   if(!dir.exists(file.path(dir))) {
     dir.create(file.path(dir))
   }
-  filename<- paste0(dir, "/", round," (", get_token() ,").png")
+  filename<- paste0(dir, "/", level,"-",round," (", get_token() ,").png")
   
-  drawn_plot<-draw_plot(plot_data)
+  drawn_plot<-draw_plot(plot_data,level)
   
   ggsave(filename, plot=drawn_plot, width = 20, height = 15, units = "cm")
   
+  archive_data(results)
 }
 
 # ----------------------------
 # Plots
-draw_plot<-function(plot_data){
+draw_plot<-function(plot_data,level){
   #multi_join(results$test_scores, full_join )
   require(ggplot2)
   
@@ -209,7 +210,7 @@ draw_plot<-function(plot_data){
     #### add Y axis label & grid
     scale_y_continuous(breaks=c(seq(0,max(plot_data$test.scores)+5,by=2)),expand = c(0.0, 0),name = "Test score") +
     #### add heading
-    labs(title = paste(toupper(active)))+
+    labs(title = paste(toupper(level)," ",toupper(active)))+
     # change size of legend key
     guides( linetype=guide_legend(keywidth = 2, keyheight = 1),
             colour=guide_legend(keywidth = 2, keyheight = 1)) #+
@@ -220,5 +221,25 @@ draw_plot<-function(plot_data){
 }
 
 
-
+# ----------------------------
+# Archive Data
+archive_data <- function(results, dir = "Archived_data") {
+  
+  if(!dir.exists(file.path(dir))) {
+    dir.create(file.path(dir))
+  }
+  
+  fname_prefix <- paste("Archived_Data", sep = "", collapse = "")
+  
+  fname <- paste(dir, "/",
+                 fname_prefix, 
+                 " ( ", get_token(), " )",
+                 ".RData", 
+                 sep = "", 
+                 collapse = "")
+  
+  #file export
+  save(results, file = fname)
+  
+} 
 

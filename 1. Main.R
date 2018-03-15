@@ -24,9 +24,14 @@ for(r in 1:total_rounds){
 }
 results$itm_params
 
+# Assign a level
+results$level<- ifelse(sample(c(0,1), replace=TRUE, size=1)==0 ,"Junior" , "Senior")
+  
 # use item thresholds to calculate test info curves
 results$test_scores <-results%>%
 {pmap(list(.$round,.$itm_params),score_a_test)}
+
+results
 
 
 # plot plots plots
@@ -34,15 +39,13 @@ results$test_scores <-results%>%
 output_directory<- "Output_Charts"   #folder will be created if it does not already exist
 
 results%>%
-{ pmap(list(.$test_scores,.$round, output_directory), create_plot) } 
+{ pmap(list(.$test_scores,.$round,.$level, output_directory), create_plot) } 
 
 
 #----------------------------
 # Interface for Plots
 #----------------------------
 # User interface for all images (current and historic)
-
-output_directory<- "Output_Charts/"   
 
 rmarkdown::run("Comparing_Images.Rmd")
 
