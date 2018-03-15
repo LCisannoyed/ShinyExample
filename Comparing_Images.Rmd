@@ -154,7 +154,48 @@ suppressWarnings(
 `r  imageOutput("plot") `
 
 
+### Files
+
+```{r files, echo=FALSE}
+
+#part 3- get plot based on all the user input
+
+all_files<-reactive({all_images[all_images$round==input$round &
+                                             all_images$level==input$level, ]})
+
+output$selected_all_files <- DT::renderDataTable({
+ 
+    no_files<-data.frame(comment=c("No files found"))
+  tryCatch(
+    { 
+      if (nrow(all_images)>0){
+        
+        hold_files<- all_files()
+        hold_files<- DT::datatable(hold_files, 
+                                         options = list(lengthMenu = c(100, 30, 50),
+                                                        pageLength = 10,
+                                                        scrollY = '600px',
+                                                        scrollX = '300px',
+                                                        paging = TRUE
+                                                      ))
+        }
+ 
+      },
+    error=function(cond) {
+      # Choose a return value in case of error
+      return(no_proportions)
+    },
+    warning=function(cond) {
+        # Choose a return value in case of error 
+      return(no_proportions)
+
+    }
+   )
+  })
+
+```
+`r DT::dataTableOutput('selected_all_files')`
+
 ### Item Thresholds
 
 Under construction
-

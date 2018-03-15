@@ -23,7 +23,6 @@ results<-data_frame("round"=paste0("round",seq(1,total_rounds)),"itm_params"=seq
 for(r in 1:total_rounds){
   results[r,]$itm_params<-list(unlist(runif(total_items, min = -3.000, max = 3.000)))
 }
-results$itm_params
 
 # Assign a level
 results$level<- ifelse(sample(c(0,1), replace=TRUE, size=1)==0 ,"Junior" , "Senior")
