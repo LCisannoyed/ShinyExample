@@ -48,5 +48,3 @@ results%>%
 # User interface for all images (current and historic)
 
 rmarkdown::run("Comparing_Images.Rmd")
-
-

@@ -7,6 +7,9 @@ output:
   flexdashboard::flex_dashboard:
     orientation: columns 
     vertical_layout: fill
+    theme: paper  #cerulean  #journal  #flatly #  readable # spacelab  #paper
+
+
 runtime: shiny
 
 ---
@@ -106,6 +109,7 @@ output$selected_time<-renderText({selected_time()})
 output$selected_fname<-renderText({selected_fname()})
 ```
 
+
 Column  {.tabset}
 -------------------------------------
 
@@ -158,7 +162,7 @@ suppressWarnings(
 
 ```{r files, echo=FALSE}
 
-#part 3- get plot based on all the user input
+#part 4- list of files  
 
 all_files<-reactive({all_images[all_images$round==input$round &
                                              all_images$level==input$level, ]})
@@ -199,3 +203,54 @@ output$selected_all_files <- DT::renderDataTable({
 ### Item Thresholds
 
 Under construction
+```{r thresholds, echo=FALSE}
+ 
+#part 4- load threshold from archived data
+
+thresholds<-reactive({ 
+  
+  # get first case of archive data as a temp measure
+   chart_directory <- "Archived_data/"
+   temp_archived_data<-list.files(chart_directory, 
+                                      "*.RData", full.names = F)[1]
+    temp_archived_data <- paste('Archived_data/',temp_archived_data, sep="")
+ 
+
+  # real archived data to match selection  criteria
+  timestamp <-substr(selected_fname(), regexpr('\\(', selected_fname())+1, regexpr('\\)', selected_fname())-1) 
+  fname <- paste('Archived_data/Archived_Data ( ',timestamp," ).RData", sep="")
+
+  tryCatch(
+      {if(file.exists(fname)){
+             get(load(fname))
+        }
+        },
+      error=function(cond) {
+       # Choose a return value in case of error
+       data_frame(round=all_rounds,itm_params=all_rounds )   
+        },
+     warning=function(cond) {
+         # Choose a return value in case of error
+       data_frame(round=all_rounds,itm_params=all_rounds )   
+     }
+    )
+
+  
+  
+})
+
+output$thresholds <- DT::renderDataTable({
+ 
+    selected_round<-input$round
+    selected_level<-input$level
+    
+    threshold <- thresholds()%>%
+                   filter(.$round==selected_round)%>%
+                   select(itm_params)
+     
+    t(t(unlist(threshold)))
+     
+  })
+
+```
+`r  DT::dataTableOutput('thresholds')`
