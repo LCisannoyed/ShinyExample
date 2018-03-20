@@ -16,12 +16,17 @@ runtime: shiny
 <!-- set up -->
 
 ```{r setup, include=FALSE}
-library("shiny")
+library("shiny",quietly = T)
 library("flexdashboard")
-library("DT")
-library("plotly")
-library("tidyverse")
-library("magrittr")
+library("DT",quietly = T)
+library("plotly",quietly = T)
+library("tidyverse",quietly = T)
+library("magrittr",quietly = T)
+library("crosstalk",quietly = T)
+library("data.table",quietly = T)
+library(htmltools)
+library(htmlTable,quietly=T)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -152,6 +157,7 @@ suppressWarnings(
  }, deleteFile = FALSE)
  )
  
+
 ```
 > File: `r textOutput("selected_fname")`
 
@@ -202,7 +208,13 @@ output$selected_all_files <- DT::renderDataTable({
 
 ### Item Thresholds
 
-Under construction
+Still undergoing construction. 
+
+One day this tab will allow a user to select items and then see how those items appear on a chart. eg
+
+http://lenkiefer.com/chartbooks/jan2017/housing-market-dashboard-jan2017.html#linked-chart-with-table
+
+
 ```{r thresholds, echo=FALSE}
  
 #part 4- load threshold from archived data
@@ -213,8 +225,8 @@ first_threshold<-reactive({
    thresh<-list.files(directory, "*.RData", full.names = T)[1] 
  
  substr(thresh, 
-       regexpr('\\(', thresh)+1, 
-       regexpr('\\)', thresh)-1) 
+       regexpr('\\(', thresh)+2, 
+       regexpr('\\)', thresh)-2) 
  })
 )
 
@@ -251,10 +263,12 @@ load_thresholds<-reactive({
         },
       error=function(cond) {
        # Choose a return value in case of error
+        fname <- paste('Archived_data/Archived_Data ( ',first_threshold()," ).RData", sep="")
         get(load(fname))
         },
      warning=function(cond) {
          # Choose a return value in case of error
+        fname <- paste('Archived_data/Archived_Data ( ',first_threshold()," ).RData", sep="")
         get(load(fname))
      }
     )
@@ -267,12 +281,17 @@ suppressWarnings(
 
 output$showthresholds <- DT::renderDataTable({
  
-   results <- load_thresholds()
-   threshold <- results[results$round==input$round,]$itm_params
+   threshold <- load_thresholds()
+   threshold <- threshold[threshold$round==input$round,]$itm_params
    threshold <- unlist(threshold)
    threshold <- data.frame(threshold)
-
+   threshold <- cbind(item=paste0("item ",seq(1:nrow(threshold))),threshold)
+   threshold <- group_by(threshold,item)
+   threshold <- data.table(threshold)
   })
 )
+
+
 ```
 `r  DT::dataTableOutput('showthresholds')`
+
