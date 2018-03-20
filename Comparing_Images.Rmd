@@ -238,11 +238,11 @@ suppressWarnings(
   
 )
 suppressWarnings(
-thresholds<-reactive({ 
+load_thresholds<-reactive({ 
   
  #   substr(selected_fname(), regexpr('\\(', selected_fname())+2, regexpr('\\)', selected_fname())-2) 
  # timestamp <-"2018-03-15 19.45.58" 
-  fname <- paste('Archived_data/Archived_Data ( ',timestamp()," ).RData", sep="")
+  fname <- paste('Archived_data/Archived_Data ( ',threshold_timestamp()," ).RData", sep="")
 
  loaded_threshold<- tryCatch(
       {if(file.exists(fname)){
@@ -265,18 +265,14 @@ thresholds<-reactive({
 )
 suppressWarnings(
 
-output$thresholds <- DT::renderDataTable({
+output$showthresholds <- DT::renderDataTable({
  
-    selected_round<-input$round
-    selected_level<-input$level
-    
-    threshold <- thresholds()%>%
-                   filter(.$round==selected_round)%>%
-                   select(itm_params)
-     
-    t(t(unlist(threshold)))
-     
+   results <- load_thresholds()
+   threshold <- results[results$round==input$round,]$itm_params
+   threshold <- unlist(threshold)
+   threshold <- data.frame(threshold)
+
   })
 )
 ```
-`r  DT::dataTableOutput('thresholds')`
+`r  DT::dataTableOutput('showthresholds')`
